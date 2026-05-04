@@ -1,9 +1,5 @@
-const { Server } = require("@modelcontextprotocol/sdk/server/index.js");
-const { StdioServerTransport } = require("@modelcontextprotocol/sdk/server/stdio.js");
-const { CallToolRequestSchema, ListToolsRequestSchema } = require("@modelcontextprotocol/sdk/types.js");
-
 // GLOBAL FIX: Redirect all stdout to stderr. 
-// This prevents library logs/ads from corrupting the MCP JSON-RPC stream.
+// This MUST be at the very top, before any requires, because some libraries print ads on import.
 const originalStdoutWrite = process.stdout.write;
 process.stdout.write = function(chunk, encoding, callback) {
     if (typeof chunk === 'string' && (chunk.startsWith('{') || chunk.startsWith('['))) {
@@ -12,6 +8,9 @@ process.stdout.write = function(chunk, encoding, callback) {
     return process.stderr.write.apply(process.stderr, arguments);
 };
 
+const { Server } = require("@modelcontextprotocol/sdk/server/index.js");
+const { StdioServerTransport } = require("@modelcontextprotocol/sdk/server/stdio.js");
+const { CallToolRequestSchema, ListToolsRequestSchema } = require("@modelcontextprotocol/sdk/types.js");
 const { manager } = require("./stealth_manager.js");
 
 const server = new Server(
