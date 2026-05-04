@@ -16,7 +16,6 @@ class StealthBrowserManager {
     async ensureInitialized() {
         if (this.isInitialized && this.browser) return;
 
-        console.error("[StealthManager] Initializing Warm Browser...");
         
         // Redirect stdout to stderr temporarily to prevent library ads from breaking MCP
         const originalWrite = process.stdout.write;
@@ -51,8 +50,8 @@ class StealthBrowserManager {
             headless: true,
         });
 
+
         this.isInitialized = true;
-        console.error("[StealthManager] Browser is now WARM and ready.");
     }
 
     async performSearch(query, numResults = 5, lang = 'tr') {
@@ -60,7 +59,6 @@ class StealthBrowserManager {
         
         const page = await this.browser.newPage();
         try {
-            console.error(`[StealthManager] Searching: "${query}"`);
             
             // Navigate to Google
             await page.goto(`https://www.google.com/?hl=${lang}`, { waitUntil: 'networkidle' });
@@ -86,7 +84,6 @@ class StealthBrowserManager {
             const maxPages = 3; // Limit to avoid detection
 
             while (allResults.length < numResults && pagesVisited < maxPages) {
-                console.error(`[StealthManager] Parsing page ${pagesVisited + 1}...`);
                 await page.waitForSelector('div.g, div.tF2Cxc', { timeout: 10000 }).catch(() => {});
                 
                 // Random scroll to mimic reading
@@ -119,7 +116,6 @@ class StealthBrowserManager {
                 // Try to go to next page
                 const nextButton = await page.$('a#pnnext, a:has-text("Sonraki"), a:has-text("Next")');
                 if (nextButton) {
-                    console.error("[StealthManager] Moving to next page...");
                     await nextButton.click();
                     await page.waitForNavigation({ waitUntil: 'networkidle' });
                     pagesVisited++;
@@ -139,7 +135,6 @@ class StealthBrowserManager {
         await this.ensureInitialized();
         const page = await this.browser.newPage();
         try {
-            console.error(`[StealthManager] News Search: "${query}"`);
             const url = `https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=nws&num=${numResults}&hl=${lang}`;
             await page.goto(url, { waitUntil: 'networkidle' });
             
@@ -166,7 +161,6 @@ class StealthBrowserManager {
 
     async shutdown() {
         if (this.browser) {
-            console.error("[StealthManager] Shutting down browser...");
             await this.browser.close();
             this.browser = null;
             this.isInitialized = false;
