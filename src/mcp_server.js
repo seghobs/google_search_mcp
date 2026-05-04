@@ -1,11 +1,16 @@
 // GLOBAL FIX: Redirect all stdout to stderr. 
-// This MUST be at the very top, before any requires, because some libraries print ads on import.
+// This MUST be at the very top, before any requires.
 const originalStdoutWrite = process.stdout.write;
 process.stdout.write = function(chunk, encoding, callback) {
     if (typeof chunk === 'string' && (chunk.startsWith('{') || chunk.startsWith('['))) {
         return originalStdoutWrite.apply(process.stdout, arguments);
     }
     return process.stderr.write.apply(process.stderr, arguments);
+};
+
+// Also override all console methods to use stderr
+console.log = console.warn = console.info = console.debug = (...args) => {
+    process.stderr.write(args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ') + '\n');
 };
 
 const { Server } = require("@modelcontextprotocol/sdk/server/index.js");
