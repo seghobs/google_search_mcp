@@ -4,4 +4,9 @@ examples/*.jpeg
 examples/profile
 .vscode
 *.env
-data
+data/
+scratch/
+claude_desktop_config.json
+captcha_detected.html
+*.log
+.DS_Store
