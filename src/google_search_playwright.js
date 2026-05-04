@@ -35,10 +35,6 @@ async function performSearch(query, numResults = 5, lang = 'tr', proxy = null) {
         plugin.useFingerprint(fingerprint, {
             safeElementSize: true
         });
-    } finally {
-        // Restore stdout
-        process.stdout.write = originalStdoutWrite;
-    }
 
         if (proxy) {
             plugin.useProxy(proxy);
@@ -139,6 +135,9 @@ async function performSearch(query, numResults = 5, lang = 'tr', proxy = null) {
     } catch (error) {
         console.error(`[Playwright Error]: ${error.message}`);
         throw error;
+    } finally {
+        // ALWAYS Restore stdout
+        process.stdout.write = originalStdoutWrite;
     }
 }
 

@@ -12,16 +12,19 @@ async function performNewsSearch(query, numResults = 5, lang = 'tr', proxy = nul
     process.stdout.write = process.stderr.write.bind(process.stderr);
 
     try {
+        const serviceKey = process.env.FINGERPRINT_KEY || '';
+        plugin.setServiceKey(serviceKey);
+        plugin.setRequestTimeout(2 * 60000); 
+        plugin.setEngineTimeout(5 * 60000);
+
         console.error(`[Playwright News] FETCHING FINGERPRINT for query: "${query}"...`);
         const fingerprint = await plugin.fetch({
             tags: ['Microsoft Windows', 'Chrome'],
         });
         
-        if (!fingerprint) throw new Error("Failed to fetch fingerprint.");
+        if (!fingerprint) throw new Error("CRITICAL: Failed to fetch fingerprint.");
+        
         plugin.useFingerprint(fingerprint, { safeElementSize: true });
-    } finally {
-        process.stdout.write = originalStdoutWrite;
-    }
 
         const dataDir = path.join(process.cwd(), 'data');
         if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
@@ -68,6 +71,8 @@ async function performNewsSearch(query, numResults = 5, lang = 'tr', proxy = nul
     } catch (error) {
         console.error(`[Playwright News Error]: ${error.message}`);
         throw error;
+    } finally {
+        process.stdout.write = originalStdoutWrite;
     }
 }
 
