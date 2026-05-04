@@ -7,6 +7,10 @@ async function performNewsSearch(query, numResults = 5, lang = 'tr', proxy = nul
     plugin.setServiceKey(serviceKey);
     plugin.setRequestTimeout(2 * 60000); 
 
+    // GLOBAL FIX: Redirect all stdout to stderr for this process to prevent library ads.
+    const originalStdoutWrite = process.stdout.write;
+    process.stdout.write = process.stderr.write.bind(process.stderr);
+
     try {
         console.error(`[Playwright News] FETCHING FINGERPRINT for query: "${query}"...`);
         const fingerprint = await plugin.fetch({
@@ -15,6 +19,9 @@ async function performNewsSearch(query, numResults = 5, lang = 'tr', proxy = nul
         
         if (!fingerprint) throw new Error("Failed to fetch fingerprint.");
         plugin.useFingerprint(fingerprint, { safeElementSize: true });
+    } finally {
+        process.stdout.write = originalStdoutWrite;
+    }
 
         const dataDir = path.join(process.cwd(), 'data');
         if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });

@@ -7,15 +7,18 @@ const path = require('path');
  * Strictly follows the "fetch fingerprint first" rule.
  */
 async function performSearch(query, numResults = 5, lang = 'tr', proxy = null) {
-    // 1. Initial Configuration
-    const serviceKey = process.env.FINGERPRINT_KEY || '';
-    plugin.setServiceKey(serviceKey);
-    
-    // Set a generous timeout for the engine and fetching (especially for free tier)
-    plugin.setRequestTimeout(2 * 60000); 
-    plugin.setEngineTimeout(5 * 60000);
+    // GLOBAL FIX: Redirect all stdout to stderr for this process to prevent library ads.
+    const originalStdoutWrite = process.stdout.write;
+    process.stdout.write = process.stderr.write.bind(process.stderr);
 
     try {
+        const serviceKey = process.env.FINGERPRINT_KEY || '';
+        plugin.setServiceKey(serviceKey);
+        
+        // Set a generous timeout for the engine and fetching (especially for free tier)
+        plugin.setRequestTimeout(2 * 60000); 
+        plugin.setEngineTimeout(5 * 60000);
+
         // 2. FETCH FINGERPRINT FIRST (Strictly before any browser action)
         console.error(`[Playwright] FETCHING FINGERPRINT for query: "${query}"...`);
         const fingerprint = await plugin.fetch({
@@ -29,10 +32,13 @@ async function performSearch(query, numResults = 5, lang = 'tr', proxy = null) {
         console.error("[Playwright] Fingerprint successfully obtained.");
 
         // 3. APPLY FINGERPRINT
-        // We use safeElementSize: true as it can improve stealth (mentioned in docs as disabled by default)
         plugin.useFingerprint(fingerprint, {
             safeElementSize: true
         });
+    } finally {
+        // Restore stdout
+        process.stdout.write = originalStdoutWrite;
+    }
 
         if (proxy) {
             plugin.useProxy(proxy);
