@@ -1,6 +1,17 @@
 const { Server } = require("@modelcontextprotocol/sdk/server/index.js");
 const { StdioServerTransport } = require("@modelcontextprotocol/sdk/server/stdio.js");
 const { CallToolRequestSchema, ListToolsRequestSchema } = require("@modelcontextprotocol/sdk/types.js");
+
+// GLOBAL FIX: Redirect all stdout to stderr. 
+// This prevents library logs/ads from corrupting the MCP JSON-RPC stream.
+const originalStdoutWrite = process.stdout.write;
+process.stdout.write = function(chunk, encoding, callback) {
+    if (typeof chunk === 'string' && (chunk.startsWith('{') || chunk.startsWith('['))) {
+        return originalStdoutWrite.apply(process.stdout, arguments);
+    }
+    return process.stderr.write.apply(process.stderr, arguments);
+};
+
 const { manager } = require("./stealth_manager.js");
 
 const server = new Server(
