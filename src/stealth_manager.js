@@ -18,20 +18,29 @@ class StealthBrowserManager {
 
         console.error("[StealthManager] Initializing Warm Browser...");
         
-        const serviceKey = process.env.FINGERPRINT_KEY || '';
-        plugin.setServiceKey(serviceKey);
-        plugin.setRequestTimeout(2 * 60000); 
-        plugin.setEngineTimeout(5 * 60000);
+        // Redirect stdout to stderr temporarily to prevent library ads from breaking MCP
+        const originalWrite = process.stdout.write;
+        process.stdout.write = process.stderr.write.bind(process.stderr);
 
-        // 1. Fetch Fingerprint
-        const fingerprint = await plugin.fetch({
-            tags: ['Microsoft Windows', 'Chrome'],
-        });
-        
-        if (!fingerprint) throw new Error("Failed to fetch fingerprint.");
-        
-        // 2. Apply
-        plugin.useFingerprint(fingerprint, { safeElementSize: true });
+        try {
+            const serviceKey = process.env.FINGERPRINT_KEY || '';
+            plugin.setServiceKey(serviceKey);
+            plugin.setRequestTimeout(2 * 60000); 
+            plugin.setEngineTimeout(5 * 60000);
+
+            // 1. Fetch Fingerprint
+            const fingerprint = await plugin.fetch({
+                tags: ['Microsoft Windows', 'Chrome'],
+            });
+            
+            if (!fingerprint) throw new Error("Failed to fetch fingerprint.");
+            
+            // 2. Apply
+            plugin.useFingerprint(fingerprint, { safeElementSize: true });
+        } finally {
+            // Restore stdout
+            process.stdout.write = originalWrite;
+        }
 
         // 3. Launch
         const dataDir = path.join(process.cwd(), 'data');

@@ -8,6 +8,7 @@ import re
 from urllib.parse import quote_plus, urljoin
 from mcp.server.fastmcp import FastMCP
 import subprocess
+import os
 from curl_cffi import requests
 from bs4 import BeautifulSoup
 
@@ -211,8 +212,11 @@ def google_search_stealth(
         JSON formatında arama sonuçları
     """
     try:
-        # Node.js scriptini çağır
-        cmd = ["node", "src/google_search_playwright.js", query, str(num_results)]
+        # Node.js scriptini mutlak yol ile çağır
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        script_path = os.path.join(base_dir, "src", "google_search_playwright.js")
+        
+        cmd = ["node", script_path, query, str(num_results)]
         result = subprocess.run(
             cmd,
             capture_output=True,
@@ -244,7 +248,10 @@ def google_news_stealth(
         lang:        Dil kodu
     """
     try:
-        cmd = ["node", "src/google_news_playwright.js", query, str(num_results)]
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        script_path = os.path.join(base_dir, "src", "google_news_playwright.js")
+        
+        cmd = ["node", script_path, query, str(num_results)]
         result = subprocess.run(
             cmd, capture_output=True, text=True, encoding="utf-8", check=True
         )
